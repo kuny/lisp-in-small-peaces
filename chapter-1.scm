@@ -1,0 +1,22 @@
+;;;; Lisp in Small Peaces
+;;;; Chapter 1
+
+(define (evaluate e env)
+  (if (atom? e)
+    (cond ((symbol? e) (lookup e env))
+          ((or (number? e)
+               (string? e)
+               (char? e)
+               (boolean? e)
+               (vector? e)) e)
+          (else (worng "Cannot evaluate " e)))
+    (case (car e)
+      ((quote) (cadr e))
+      ((if)    (if (evaluate (cadr e) env)
+                   (evaluate (caddr e) env)
+                   (evaluate (cadddr e) env) ))
+      ((begin) (eprogn (cdr e) env))
+      ((set!)  (update! (cadr e) env (evaluate (caddr e) env)))
+      ((lambda) (make-function (cadr e) (cddr e) env))
+      (else (invoke (evaluate (car e) env)
+                    (evlis (cdr e) env) )) ) ) )
